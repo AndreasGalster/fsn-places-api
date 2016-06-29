@@ -1,113 +1,67 @@
-<dom-module id="fsn-places-api">
+<dom-module id='fsn-places-api'>
   <template>
-    <google-maps-api api-key="[[apiKey]]" on-api-load="mapsLoaded"></google-maps-api>
+    <google-maps-api api-key=[[apiKey]] on-api-load='mapsLoaded'></google-maps-api>
   </template>
 </dom-module>
 
 <script>
-  require('@polymer/polymer/polymer.html');
-  require('@polymer/google-apis/google-maps-api.html');
 
-  Polymer({
+require('@polymer/polymer/polymer.html');
+require('@polymer/google-apis/google-maps-api.html');
 
-    is: 'fsn-places-api',
+Polymer({
 
-    properties: {
+  is: 'fsn-places-api',
 
-      apiKey: {
-        type: String,
-        value: function() {
-          return '';
-        }
-      },
+  properties: {
 
-      inputValue: {
-        type: String,
-        value: function() {
-          return '';
-        },
-        notify: true,
-        observer: 'getPrediction'
-      },
-
-      results: {
-        type: Array,
-        value: function() {
-          return [];
-        },
-        notify: true,
-        // reflectToAttribute: true
-      }
-
-
-
+    apiKey: String,
+    inputValue: {
+      type: String,
+      notify: true,
+      observer: 'getPrediction'
     },
+    results: {
+      type: Array,
+      notify: true
+    }
+  },
 
-    mapsLoaded: function() {
-      this.service = new google.maps.places.AutocompleteService();
-    },
+  // reflectToAttribute: true
+  mapsLoaded: function() {
+    this.service = new google.maps.places.AutocompleteService();
+  },
 
-    getPrediction: function() {
-      // this.results = this.value;
-      if(!this.$$('google-maps-api').libraryLoaded) {
+  getPrediction: function() {
+    if (!this.$$('google-maps-api').libraryLoaded) {
+      return;
+    }
+    var options = {
+      input: this.inputValue,
+      types: ['(cities)']
+    };
+
+
+    var displaySuggestions = (predictions, status) => {
+      if (status !== 'OK') {
+        // if (status != google.maps.places.PlacesServiceStatus.OK) {
+        alert(status);
         return;
       }
-      var options = {
-        input: this.inputValue,
-        types: ['(cities)']
-      };
-      //
-      //
-      // var self = this;
-      // var displaySuggestions = function(predictions, status) {
-      //   if(status !== 'OK'){
-      //     // if (status != google.maps.places.PlacesServiceStatus.OK) {
-      //     alert(status);
-      //     return;
-      //   }
-      //
-      //
-      //   this.results = [];
-      //
-      //   predictions.forEach( function(prediction) {
-      // self.push('results', prediction.description);
-  //
-           // console.log(prediction);
-      //     // this.results.push(prediction.description);
-      //     self.results.push(
-      //       {
-      //         city: prediction.description,
-      //           id: prediction.place_id
-      //       }
-      //     );
-      //   });
-      //   console.log(self.results);
-      // };
 
-
-      var displaySuggestions = (predictions, status) => {
-        if(status !== 'OK'){
-          // if (status != google.maps.places.PlacesServiceStatus.OK) {
-          alert(status);
-          return;
-        }
-
-        let results = [];
-        predictions.forEach( (prediction) => {
-          // results.push(prediction.description);
-          results.push(
-            {
-              cityname: prediction.description,
-                cityid: prediction.place_id
-            }
-          );
+      var results = [];
+      predictions.forEach( (prediction) => {
+        results.push({
+          cityname: prediction.terms[0].value,
+          // cityname: prediction.description,
+          cityid: prediction.place_id
         });
-        this.results = results;
-        // console.log(this.results);
-      };
+      });
+      this.results = results;
+    };
 
-      this.service.getPlacePredictions( options, displaySuggestions);
-    },
-  });
+    this.service.getPlacePredictions(options, displaySuggestions);
+  }
+});
 
 </script>
